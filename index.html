@@ -1,0 +1,998 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src https://api.github.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Logbook">
+<meta name="theme-color" content="#EDF0F3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F151C" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>Baseline Logbook</title>
+<style>
+:root{
+  --bg:#EDF0F3; --surface:#FFFFFF; --surface2:#F5F7F9; --line:#D6DCE3; --ink:#15202B; --muted:#5A6776; --faint:#8995A3;
+  --accent:#2748B5; --accent-soft:#E3E9FA; --accent-ink:#FFFFFF;
+  --good:#1F8A5B; --good-soft:#DDF1E7; --ok:#B7790B; --ok-soft:#F8EBD0; --bad:#C23B3B; --bad-soft:#F8DEDC;
+  --band:rgba(31,138,91,.10);
+  --display:-apple-system,"SF Pro Display","Segoe UI Variable Display","Segoe UI",system-ui,Roboto,sans-serif; --body:-apple-system,"SF Pro Text","Segoe UI",system-ui,Roboto,sans-serif; --mono:ui-monospace,"SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F151C; --surface:#172029; --surface2:#1C2732; --line:#2A3743; --ink:#E6ECF2; --muted:#9AA8B6; --faint:#6E7D8C;
+    --accent:#7F9CF5; --accent-soft:#1F2A4A; --accent-ink:#0F151C;
+    --good:#4CC38A; --good-soft:#15362A; --ok:#E3AE4A; --ok-soft:#3A2F17; --bad:#EE7B73; --bad-soft:#3E1F1E; --band:rgba(76,195,138,.12);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F151C; --surface:#172029; --surface2:#1C2732; --line:#2A3743; --ink:#E6ECF2; --muted:#9AA8B6; --faint:#6E7D8C;
+  --accent:#7F9CF5; --accent-soft:#1F2A4A; --accent-ink:#0F151C;
+  --good:#4CC38A; --good-soft:#15362A; --ok:#E3AE4A; --ok-soft:#3A2F17; --bad:#EE7B73; --bad-soft:#3E1F1E; --band:rgba(76,195,138,.12);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;padding-inline:max(16px,env(safe-area-inset-left));padding-block:env(safe-area-inset-top,0px) calc(96px + env(safe-area-inset-bottom,0px))}
+[hidden]{display:none!important}
+img{max-width:100%}
+.wrap{max-width:980px;margin:0 auto}
+h1,h2,h3{font-family:var(--display);letter-spacing:-.01em;text-wrap:balance;margin:0}
+h1{font-size:26px;font-weight:800}
+h2{font-size:19px;font-weight:700}
+h3{font-size:15px;font-weight:700}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)} .small{font-size:13px} .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-block:20px 12px}
+.banner{background:var(--ok-soft);color:var(--ink);border:1px solid var(--ok);border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:12px}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs .in{display:flex;width:100%;max-width:980px}
+nav.tabs button{flex:1;background:none;border:0;color:var(--muted);font:600 12px var(--body);padding:10px 4px 12px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;border-top:2px solid transparent}
+nav.tabs button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+nav.tabs button[aria-selected="true"]{color:var(--accent);border-top-color:var(--accent)}
+section.panel{display:grid;gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.grid{display:grid;gap:12px}
+.pillars{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+@media (max-width:640px){.pillars{grid-template-columns:repeat(2,1fr)} .pillars .p:last-child{grid-column:1/-1}}
+.p{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:6px}
+.p .v{font-family:var(--display);font-stretch:112%;font-size:30px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.meter{height:6px;border-radius:3px;background:var(--surface2);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.between{justify-content:space-between}
+.pill{display:inline-flex;align-items:center;gap:5px;font:600 11px var(--mono);letter-spacing:.03em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--surface2);color:var(--muted);white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)} .pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.due{background:var(--accent-soft);color:var(--accent)}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--faint)}
+.dot.good{background:var(--good)} .dot.ok{background:var(--ok)} .dot.bad{background:var(--bad)}
+button.btn,.btn{font:600 14px var(--body);border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:9px 14px;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent}
+.btn.sm{padding:5px 10px;font-size:13px}
+.btn:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.chip{font:600 13px var(--body);border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:6px 12px;cursor:pointer;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+label.f{display:grid;gap:4px;font-size:13px;color:var(--muted)}
+input,select,textarea{font:15px var(--body);color:var(--ink);background:var(--surface2);border:1px solid var(--line);border-radius:7px;padding:8px 10px;width:100%;min-width:0}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
+textarea{resize:vertical;min-height:64px}
+.form2{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.scale{display:flex;gap:4px}
+.scale button{flex:1;min-width:0;font:600 14px var(--mono);border:1px solid var(--line);background:var(--surface2);color:var(--muted);border-radius:6px;padding:7px 0;cursor:pointer}
+.scale button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.checks label{display:flex;align-items:center;gap:8px;font-size:14px;background:var(--surface2);border:1px solid var(--line);border-radius:7px;padding:8px 10px;cursor:pointer}
+.mlist{display:grid;gap:0}
+.mrow{display:grid;grid-template-columns:1fr 130px;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.mrow:first-child{border-top:0}
+.mrow .how{font-size:13px;color:var(--muted)}
+.mrow .unit{font:12px var(--mono);color:var(--faint)}
+@media (max-width:480px){.mrow{grid-template-columns:1fr 104px}}
+.mcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:10px}
+.mc{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:6px;cursor:pointer;text-align:left;font:inherit;color:inherit}
+.mc:hover{border-color:var(--faint)}
+.mc .val{font-family:var(--display);font-stretch:112%;font-weight:700;font-size:22px;font-variant-numeric:tabular-nums;line-height:1.1}
+.mc .val small{font:12px var(--mono);color:var(--faint);margin-left:4px}
+.spark{width:100%;height:auto;display:block}
+.detail{grid-column:1/-1;cursor:default}
+.hist{width:100%;border-collapse:collapse;font-size:13px}
+.hist td{padding:6px 4px;border-top:1px solid var(--line)}
+.hist td:last-child{text-align:right}
+.tablewrap{overflow-x:auto}
+table.plain{border-collapse:collapse;width:100%;font-size:14px}
+table.plain th,table.plain td{text-align:left;padding:8px 8px;border-top:1px solid var(--line);vertical-align:top}
+table.plain th{font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-top:0}
+.prose{max-width:68ch}
+.prose p{margin:.4em 0}
+.prose ul{margin:.3em 0;padding-left:1.2em}
+.coach-out{white-space:normal;line-height:1.6}
+.coach-out h4{font-family:var(--display);font-stretch:112%;margin:12px 0 4px;font-size:15px}
+.coach-out ul{padding-left:1.2em;margin:4px 0}
+.testbox{display:grid;place-items:center;min-height:180px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);font:700 20px var(--display);text-align:center;padding:16px;user-select:none;-webkit-user-select:none;touch-action:manipulation;cursor:pointer}
+.testbox.go{background:var(--good);color:#fff;border-color:var(--good)}
+.testbox.wait{background:var(--bad-soft);color:var(--bad)}
+.digits{font:600 44px var(--mono);letter-spacing:.1em}
+.q{display:grid;gap:6px;padding:10px 0;border-top:1px solid var(--line)}
+.q:first-of-type{border-top:0}
+.opts{display:flex;gap:4px;flex-wrap:wrap}
+.opts button{flex:1 1 60px;font:500 12px var(--body);border:1px solid var(--line);background:var(--surface2);color:var(--muted);border-radius:6px;padding:6px 4px;cursor:pointer}
+.opts button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:14px;z-index:30}
+.duelist{display:flex;flex-wrap:wrap;gap:6px}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.kv div{display:grid;gap:2px}
+.kv b{font:600 18px var(--mono);font-variant-numeric:tabular-nums}
+svg text{font-family:var(--mono)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow" id="todayLbl">Logbook</div>
+      <h1>Baseline Logbook</h1>
+    </div>
+    <div class="row small muted" id="syncState">Connecting…</div>
+  </header>
+  <div id="banner"></div>
+  <main id="main"></main>
+</div>
+<nav class="tabs" aria-label="Sections"><div class="in" id="tabs"></div></nav>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+/* ============ Catalog ============ */
+const PILLARS = [
+  {k:'longevity', n:'Longevity'},
+  {k:'strength', n:'Strength'},
+  {k:'cognition', n:'Cognition'},
+  {k:'happiness', n:'Happiness'},
+  {k:'fortitude', n:'Fortitude'},
+];
+const CATS = [
+  {k:'body', n:'Body'}, {k:'heart', n:'Heart & endurance'}, {k:'strength', n:'Strength'},
+  {k:'mobility', n:'Mobility & balance'}, {k:'cognition', n:'Cognition'}, {k:'mind', n:'Mind'}, {k:'blood', n:'Blood work'}, {k:'habits', n:'Habits'}
+];
+// dir: up | down | range | none.  good/ok thresholds. cad = retest days (0 = once). src: input | derived | daily | test
+const M = [
+ // Body
+ {k:'weight', n:'Body weight', u:'kg', c:'body', dir:'none', cad:7, how:'Morning, after toilet, before food. Same scale.'},
+ {k:'waist', n:'Waist', u:'cm', c:'body', dir:'down', good:85, ok:90, cad:30, p:'longevity', how:'Tape at navel level, relaxed after a normal exhale, morning. Average of 2. Indian cut-off for men is 90 cm.'},
+ {k:'whtr', n:'Waist ÷ height', u:'', c:'body', dir:'down', good:0.5, ok:0.55, p:'longevity', src:'derived', dp:2, how:'Computed from waist and height. Under 0.5 is the target — one of the best cheap cardiometabolic risk markers.'},
+ {k:'bmi', n:'BMI', u:'', c:'body', dir:'range', good:[18.5,23], ok:[17.5,25], p:'longevity', src:'derived', dp:1, how:'Computed. Asian cut-offs: 23+ is overweight. Muscular people read high, so trust waist more.'},
+ {k:'bp_sys', n:'BP systolic', u:'mmHg', c:'body', dir:'down', good:120, ok:130, cad:90, p:'longevity', how:'Campus hospital or pharmacy. Sit 5 min, arm at heart level, 2 readings 1 min apart, log the average.'},
+ {k:'bp_dia', n:'BP diastolic', u:'mmHg', c:'body', dir:'down', good:80, ok:85, cad:90, p:'longevity', how:'Same reading as systolic.'},
+ // Heart
+ {k:'rhr', n:'Resting heart rate', u:'bpm', c:'heart', dir:'down', good:60, ok:70, cad:7, p:'longevity', how:'On waking, still lying down: count wrist pulse for a full 60 s. Log in the daily check-in when you can.'},
+ {k:'cooper', n:'Cooper 12-min run', u:'m', c:'heart', dir:'none', cad:90, how:'Warm up 10 min. Cover max distance in 12 min on a 400 m track. Gives VO₂max estimate.'},
+ {k:'vo2', n:'VO₂max (est.)', u:'ml/kg/min', c:'heart', dir:'up', good:48, ok:42, p:'longevity', src:'derived', dp:1, how:'(distance − 504.9) ÷ 44.73. The strongest single fitness predictor of lifespan. 48+ is top-tier for men in their 20s–30s.'},
+ {k:'hrr', n:'HR recovery, 1 min', u:'bpm drop', c:'heart', dir:'up', good:25, ok:18, cad:90, p:'longevity', how:'Right after the Cooper run, count pulse for 15 s (×4) at 0 and at 60 s. Log the drop. Under 12 is a red flag.'},
+ {k:'zone2', n:'Cardio minutes / week', u:'min', c:'heart', dir:'up', good:150, ok:90, p:'longevity', src:'daily', how:'Sum of cardio minutes from the last 7 daily check-ins.'},
+ // Strength
+ {k:'deadhang', n:'Dead hang', u:'s', c:'strength', dir:'up', good:90, ok:60, cad:30, p:'strength', how:'Overhand grip, arms straight, feet off floor. Max time. Stand-in for grip strength, which tracks all-cause mortality.'},
+ {k:'pushups', n:'Push-ups (max)', u:'reps', c:'strength', dir:'up', good:40, ok:25, cad:30, p:'strength', how:'Chest to fist height, full lockout, no rest at top. 40+ linked with much lower cardiovascular events in men.'},
+ {k:'pullups', n:'Pull-ups (max)', u:'reps', c:'strength', dir:'up', good:12, ok:6, cad:30, p:'strength', how:'Dead hang start, chin over bar, no kipping.'},
+ {k:'squat', n:'Back squat e1RM', u:'kg', c:'strength', dir:'bw', good:1.5, ok:1.0, cad:30, p:'strength', rep:true, how:'Work up to a hard set of 3–6 with good depth. Type it as 80x5 and it converts to an estimated 1-rep max. Target 1.5× body weight.'},
+ {k:'bench', n:'Bench press e1RM', u:'kg', c:'strength', dir:'bw', good:1.0, ok:0.75, cad:30, p:'strength', rep:true, how:'Hard set of 3–6, touch chest, spotter. Type 60x5. Target 1.0× body weight.'},
+ {k:'deadlift', n:'Deadlift e1RM', u:'kg', c:'strength', dir:'bw', good:2.0, ok:1.5, cad:30, p:'strength', rep:true, how:'Hard set of 3–5, neutral spine. Type 100x5. Target 2.0× body weight.'},
+ // Mobility
+ {k:'sitrise', n:'Sit-to-rise score', u:'/10', c:'mobility', dir:'up', good:9, ok:7, cad:90, p:'longevity', how:'Barefoot, cross legs, sit to the floor and stand up. Start at 10; −1 for each hand, knee or forearm used; −0.5 for wobble.'},
+ {k:'balance', n:'One-leg stand, eyes closed', u:'s', c:'mobility', dir:'up', good:25, ok:15, cad:90, p:'longevity', how:'Hands on hips, eyes closed. Stop when the foot shifts or touches down. Best of 3 on each leg; log the weaker leg.'},
+ {k:'reach', n:'Sit-and-reach', u:'cm', c:'mobility', dir:'up', good:5, ok:-5, cad:90, how:'Legs straight, reach past toes = positive, short of toes = negative. Tape on the floor.'},
+ // Cognition
+ {k:'reaction', n:'Reaction time', u:'ms', c:'cognition', dir:'down', good:260, ok:300, cad:30, p:'cognition', src:'test', how:'Built-in test, 5 taps, same device each time. Includes screen lag, so compare with yourself, not with others.'},
+ {k:'digitspan', n:'Digit span', u:'digits', c:'cognition', dir:'up', good:8, ok:7, cad:30, p:'cognition', src:'test', how:'Built-in test of working memory. Average adult: 7.'},
+ {k:'sleep7', n:'Sleep, 7-day avg', u:'h', c:'cognition', dir:'range', good:[7,9], ok:[6.5,9.5], p:'cognition', src:'daily', dp:1, how:'From daily check-ins.'},
+ {k:'deepwork', n:'Deep work, 7-day avg', u:'h/day', c:'cognition', dir:'up', good:4, ok:2.5, p:'cognition', src:'daily', dp:1, how:'Hours of focused, undistracted work per day.'},
+ // Mind
+ {k:'who5', n:'WHO-5 wellbeing', u:'/100', c:'mind', dir:'up', good:68, ok:52, cad:14, p:'happiness', src:'test', how:'5 questions about the last 2 weeks. Below 50 means wellbeing is poor; at 28 or below, talk to a doctor or counsellor.'},
+ {k:'pss', n:'Perceived stress (PSS-10)', u:'/40', c:'mind', dir:'down', good:13, ok:20, cad:30, p:'happiness', src:'test', how:'10 questions about the last month. 0–13 low, 14–26 moderate, 27+ high.'},
+ {k:'mood7', n:'Mood, 7-day avg', u:'/5', c:'mind', dir:'up', good:3.8, ok:3, p:'happiness', src:'daily', dp:1, how:'From daily check-ins.'},
+ {k:'stress7', n:'Stress, 7-day avg', u:'/5', c:'mind', dir:'down', good:2.5, ok:3.2, p:'happiness', src:'daily', dp:1, how:'From daily check-ins.'},
+ // Habits / fortitude
+ {k:'hard7', n:'Hard thing done', u:'days/7', c:'habits', dir:'up', good:5, ok:3, p:'fortitude', src:'daily', how:'Days in the last 7 you did one voluntary hard thing you wanted to avoid.'},
+ {k:'train7', n:'Training sessions', u:'/7 days', c:'habits', dir:'up', good:4, ok:3, p:'fortitude', src:'daily', how:'Days with strength, cardio or sport in the last 7.'},
+ {k:'med7', n:'Meditation', u:'min/week', c:'habits', dir:'up', good:70, ok:35, p:'fortitude', src:'daily', how:'Sum over the last 7 days.'},
+ {k:'logged14', n:'Check-in consistency', u:'/14 days', c:'habits', dir:'up', good:12, ok:8, p:'fortitude', src:'daily', how:'Days logged in the last 14. You can only coach what you measure.'},
+ // Blood
+ {k:'apob', n:'ApoB', u:'mg/dL', c:'blood', dir:'down', good:80, ok:100, cad:365, p:'longevity', how:'Best single lipid marker of heart-disease risk. Add-on test, about ₹650.'},
+ {k:'ldl', n:'LDL cholesterol', u:'mg/dL', c:'blood', dir:'down', good:100, ok:130, cad:180, p:'longevity', how:'Part of the lipid profile.'},
+ {k:'hdl', n:'HDL cholesterol', u:'mg/dL', c:'blood', dir:'up', good:45, ok:40, cad:180, p:'longevity', how:'Part of the lipid profile.'},
+ {k:'tg', n:'Triglycerides', u:'mg/dL', c:'blood', dir:'down', good:100, ok:150, cad:180, p:'longevity', how:'Fasting 10–12 h. High values often mean excess refined carbs or alcohol.'},
+ {k:'lpa', n:'Lp(a)', u:'mg/dL', c:'blood', dir:'down', good:30, ok:50, cad:0, p:'longevity', how:'Genetic. Test once in life. High Lp(a) is common in South Asians and changes how hard you push the other lipids.'},
+ {k:'hba1c', n:'HbA1c', u:'%', c:'blood', dir:'down', good:5.4, ok:5.7, cad:180, p:'longevity', dp:1, how:'3-month average blood sugar. 5.7–6.4 is prediabetes.'},
+ {k:'fglu', n:'Fasting glucose', u:'mg/dL', c:'blood', dir:'range', good:[70,95], ok:[65,100], cad:180, p:'longevity', how:'Fasting 10–12 h.'},
+ {k:'finsulin', n:'Fasting insulin', u:'µIU/mL', c:'blood', dir:'down', good:8, ok:12, cad:180, how:'Catches insulin resistance years before glucose rises. About ₹785.'},
+ {k:'homa', n:'HOMA-IR', u:'', c:'blood', dir:'down', good:1.5, ok:2.5, p:'longevity', src:'derived', dp:2, how:'glucose × insulin ÷ 405. Needs both from the same draw.'},
+ {k:'hscrp', n:'hs-CRP', u:'mg/L', c:'blood', dir:'down', good:1, ok:3, cad:180, p:'longevity', dp:2, how:'Low-grade inflammation. Skip the test within 2 weeks of an infection or very hard training.'},
+ {k:'vitd', n:'Vitamin D (25-OH)', u:'ng/mL', c:'blood', dir:'range', good:[30,60], ok:[20,80], cad:180, p:'cognition', how:'Very commonly low in India despite sun. Supplement only if low, then retest.'},
+ {k:'b12', n:'Vitamin B12', u:'pg/mL', c:'blood', dir:'up', good:400, ok:250, cad:180, p:'cognition', how:'Low B12 affects memory and nerves. Common in vegetarians.'},
+ {k:'homocys', n:'Homocysteine', u:'µmol/L', c:'blood', dir:'down', good:10, ok:15, cad:365, p:'cognition', dp:1, how:'Rises with low B12 or folate. Linked with brain and vascular ageing.'},
+ {k:'ferritin', n:'Ferritin', u:'ng/mL', c:'blood', dir:'range', good:[40,250], ok:[30,300], cad:365, how:'Iron stores.'},
+ {k:'hb', n:'Haemoglobin', u:'g/dL', c:'blood', dir:'range', good:[13.5,17.5], ok:[13,18], cad:365, dp:1, how:'From CBC.'},
+ {k:'alt', n:'ALT (SGPT)', u:'U/L', c:'blood', dir:'down', good:30, ok:45, cad:365, how:'Liver. Fatty liver is common even in lean Indians.'},
+ {k:'creat', n:'Creatinine', u:'mg/dL', c:'blood', dir:'range', good:[0.7,1.2], ok:[0.6,1.3], cad:365, dp:2, how:'Kidney. Reads higher with high muscle mass or creatine use.'},
+ {k:'tsh', n:'TSH', u:'mIU/L', c:'blood', dir:'range', good:[0.5,4], ok:[0.4,4.5], cad:365, dp:2, how:'Thyroid.'},
+ {k:'uric', n:'Uric acid', u:'mg/dL', c:'blood', dir:'down', good:6, ok:7, cad:365, dp:1, how:'From kidney panel.'},
+ {k:'testo', n:'Testosterone, total', u:'ng/dL', c:'blood', dir:'range', good:[400,1000], ok:[300,1100], cad:365, how:'Draw between 7 and 10 am. Sleep, body fat and training all move it.'},
+];
+const MK = Object.fromEntries(M.map(m=>[m.k,m]));
+
+/* ============ Utils ============ */
+const $ = (s,el=document)=>el.querySelector(s);
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2,'0');
+const iso = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const today = () => iso(new Date());
+const parseD = s => { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); };
+const addDays = (s,n) => { const d=parseD(s); d.setDate(d.getDate()+n); return iso(d); };
+const daysBetween = (a,b) => Math.round((parseD(b)-parseD(a))/864e5);
+const fmtD = s => parseD(s).toLocaleDateString(undefined,{day:'numeric',month:'short',year: s.slice(0,4)===today().slice(0,4)?undefined:'numeric'});
+const fmtV = (m,v) => v==null||isNaN(v) ? '—' : (m.dp!=null ? (+v).toFixed(m.dp) : (Math.abs(v)>=100? Math.round(v) : Math.round(v*10)/10));
+function toast(t){ const el=$('#toast'); el.textContent=t; el.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>el.hidden=true,2200); }
+const avg = a => a.length? a.reduce((x,y)=>x+y,0)/a.length : null;
+
+/* ============ Store: local cache + private GitHub repo ============ */
+const SCHEMA = 1;             // bump when the data format changes; add a step to migrateFile()
+const LS = 'hl';              // localStorage prefix
+const S = { days:{}, profile:{name:'Shashi', birthYear:1998, height:'', sex:'male', trainPlan:4, goals:''}, coach:null, mode:'local', lastSync:null, err:'' };
+let pend = { days:{}, profile:false };   // edits not yet in GitHub (survive reloads and offline)
+let CFG = { owner:'shashishekhawat', repo:'health-data', branch:'main', token:'' };
+const lsGet = (k,d)=>{ try{ const v=localStorage.getItem(LS+'-'+k); return v==null? d : JSON.parse(v); }catch(e){ return d; } };
+const lsSet = (k,v)=>{ try{ localStorage.setItem(LS+'-'+k, JSON.stringify(v)); }catch(e){} };
+function persist(){ lsSet('cache', {days:S.days, profile:S.profile, lastSync:S.lastSync}); lsSet('pend', pend); }
+function loadLocal(){ const c=lsGet('cache',null); if(c){ S.days=c.days||{}; Object.assign(S.profile,c.profile||{}); S.lastSync=c.lastSync||null; } pend=lsGet('pend',{days:{},profile:false}); Object.assign(CFG, lsGet('cfg',{})); }
+const connected = ()=> !!(CFG.owner && CFG.repo && CFG.token);
+const pendingCount = ()=> Object.keys(pend.days).length + (pend.profile?1:0);
+
+function saveDay(date, doc){ S.days[date]=doc; pend.days[date]=doc; derivedCache=null; persist(); scheduleFlush(); return Promise.resolve(); }
+function deleteDay(date){ delete S.days[date]; pend.days[date]=null; derivedCache=null; persist(); scheduleFlush(); return Promise.resolve(); }
+function saveProfile(){ pend.profile=true; persist(); scheduleFlush(); return Promise.resolve(); }
+
+/* --- data format migrations: old files are upgraded on read, never destroyed --- */
+function migrateFile(obj){
+  obj = obj || {};
+  if(!obj.schema) obj.schema = 1;
+  // if(obj.schema===1){ ...transform...; obj.schema=2; }   <- future upgrades go here
+  return obj;
+}
+
+/* --- GitHub REST (contents API) --- */
+function b64enc(str){ const bytes=new TextEncoder().encode(str); let bin=''; for(let i=0;i<bytes.length;i+=0x8000) bin+=String.fromCharCode.apply(null, bytes.subarray(i,i+0x8000)); return btoa(bin); }
+function b64dec(b64){ const bin=atob(b64.replace(/\s/g,'')); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return new TextDecoder().decode(u); }
+async function gh(path, opts={}){
+  const r = await fetch('https://api.github.com/repos/'+encodeURIComponent(CFG.owner)+'/'+encodeURIComponent(CFG.repo)+path, {
+    ...opts, cache:'no-store',
+    headers:{ 'Authorization':'Bearer '+CFG.token, 'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28', ...(opts.body?{'Content-Type':'application/json'}:{}) } });
+  return r;
+}
+function ghError(r, j){ if(r.status===401) return 'GitHub rejected the token. Paste a new one in Settings.'; if(r.status===403) return (j&&j.message)||'GitHub refused access (token permissions or rate limit).'; if(r.status===404) return 'Repo not found. Check owner, repo name and that the token can see it.'; return 'GitHub error '+r.status+((j&&j.message)?': '+j.message:''); }
+async function getFile(path){
+  const r = await gh('/contents/'+path+'?ref='+encodeURIComponent(CFG.branch));
+  if(r.status===404) return null;
+  const j = await r.json().catch(()=>null);
+  if(!r.ok) throw new Error(ghError(r,j));
+  if(Array.isArray(j)) return {dir:j};
+  return { sha:j.sha, obj: migrateFile(JSON.parse(b64dec(j.content||''))) };
+}
+async function putFile(path, obj, sha, message){
+  const body = { message, content: b64enc(JSON.stringify(obj,null,1)+'\n'), branch: CFG.branch }; if(sha) body.sha=sha;
+  const r = await gh('/contents/'+path, {method:'PUT', body: JSON.stringify(body)});
+  if(r.status===409 || r.status===422){ const e=new Error('conflict'); e.conflict=true; throw e; }
+  const j = await r.json().catch(()=>null);
+  if(!r.ok) throw new Error(ghError(r,j));
+  return j.content.sha;
+}
+async function checkRepo(){
+  const r = await gh('');
+  const j = await r.json().catch(()=>null);
+  if(!r.ok) throw new Error(ghError(r,j));
+  if(!j.private) throw new Error('This repo is PUBLIC. Health data will only be written to a private repo. Make it private in GitHub → Settings, then try again.');
+  if(j.permissions && !j.permissions.push) throw new Error('The token can read but not write. Give it "Contents: Read and write".');
+  if(!CFG.branch) CFG.branch = j.default_branch || 'main';
+  return j;
+}
+const yearPath = y => 'data/days/'+y+'.json';
+
+/* Pull everything from GitHub, then re-apply local unsynced edits on top */
+async function pull(){
+  if(!connected()) return;
+  setSync('syncing');
+  try{
+    await checkRepo();
+    const dir = await getFile('data/days');
+    const remote = {};
+    if(dir && dir.dir){
+      for(const f of dir.dir.filter(f=>/^\d{4}\.json$/.test(f.name))){
+        const file = await getFile(f.path); if(file) Object.assign(remote, file.obj.days||{});
+      }
+    }
+    const prof = await getFile('data/profile.json');
+    if(prof && prof.obj.profile && !pend.profile) Object.assign(S.profile, prof.obj.profile);
+    for(const [d,doc] of Object.entries(pend.days)){ if(doc===null) delete remote[d]; else remote[d]=doc; }
+    S.days = remote; derivedCache=null;
+    S.lastSync = new Date().toISOString(); S.err=''; persist();
+    setSync(); refreshLive();
+    await flush();
+  }catch(e){ S.err = e.message || String(e); setSync(); }
+}
+
+let flushTimer=null, flushing=false, flushAgain=false;
+function scheduleFlush(){ setSync(); clearTimeout(flushTimer); flushTimer=setTimeout(flush, 900); }
+async function flush(){
+  if(!connected() || !navigator.onLine){ setSync(); return; }
+  if(flushing){ flushAgain=true; return; }
+  flushing=true; setSync('syncing');
+  try{
+    // days, grouped by year file
+    const snap = {...pend.days};
+    const byYear = {};
+    Object.keys(snap).forEach(d=>{ (byYear[d.slice(0,4)] ||= []).push(d); });
+    for(const [y, dates] of Object.entries(byYear)){
+      const path = yearPath(y);
+      for(let attempt=0; attempt<4; attempt++){
+        const cur = await getFile(path);
+        const obj = cur ? cur.obj : { schema:SCHEMA, year:y, days:{} };
+        obj.days = obj.days || {};
+        dates.forEach(d=>{ if(snap[d]===null) delete obj.days[d]; else obj.days[d]=snap[d]; });
+        obj.schema = SCHEMA; obj.year = y; obj.updated = new Date().toISOString();
+        const sorted = {}; Object.keys(obj.days).sort().forEach(k=>sorted[k]=obj.days[k]); obj.days = sorted;
+        try{
+          await putFile(path, obj, cur && cur.sha, dates.length===1? 'log '+dates[0] : 'log '+dates.length+' days ('+y+')');
+          dates.forEach(d=>{ if(pend.days[d]===snap[d]) delete pend.days[d]; });
+          // bring in any days other devices wrote to this year
+          Object.entries(obj.days).forEach(([d,doc])=>{ if(!(d in pend.days)) S.days[d]=doc; });
+          break;
+        }catch(e){ if(!e.conflict || attempt===3) throw e; }
+      }
+    }
+    if(pend.profile){
+      for(let attempt=0; attempt<4; attempt++){
+        const cur = await getFile('data/profile.json');
+        pend.profile=false;
+        try{ await putFile('data/profile.json', {schema:SCHEMA, updated:new Date().toISOString(), profile:S.profile}, cur && cur.sha, 'update profile'); break; }
+        catch(e){ pend.profile=true; if(!e.conflict || attempt===3) throw e; }
+      }
+    }
+    S.lastSync = new Date().toISOString(); S.err=''; derivedCache=null;
+  }catch(e){ S.err = e.message || String(e); }
+  finally{ flushing=false; persist(); setSync(); refreshLive(); if(flushAgain){ flushAgain=false; flush(); } }
+}
+function getDay(date){ const d=S.days[date]; return d? JSON.parse(JSON.stringify(d)) : {date, c:null, m:{}}; }
+
+/* ============ Series & derived ============ */
+let derivedCache=null;
+function seriesOf(k){ // raw input series [{d,v}] ascending
+  return Object.keys(S.days).sort().filter(d=>S.days[d].m && S.days[d].m[k]!=null).map(d=>({d, v:+S.days[d].m[k]}));
+}
+function latestOn(k, date){ // latest value on or before date
+  const s=seriesOf(k).filter(x=>x.d<=date); return s.length? s[s.length-1] : null;
+}
+function checkins(){ return Object.keys(S.days).sort().filter(d=>S.days[d].c).map(d=>({d, ...S.days[d].c})); }
+function dailyWindow(end, n){ const start=addDays(end,-(n-1)); return checkins().filter(c=>c.d>=start && c.d<=end); }
+function dailyVal(k, end){
+  const w7=dailyWindow(end,7);
+  const num = (arr,f)=>arr.map(x=>x[f]).filter(v=>v!==''&&v!=null&&!isNaN(v)).map(Number);
+  switch(k){
+    case 'zone2': return w7.length? num(w7,'cardio').reduce((a,b)=>a+b,0) : null;
+    case 'sleep7': return avg(num(w7,'sleep'));
+    case 'deepwork': return avg(num(w7,'deep'));
+    case 'mood7': return avg(num(w7,'mood'));
+    case 'stress7': return avg(num(w7,'stress'));
+    case 'hard7': return w7.length? w7.filter(x=>x.hard).length : null;
+    case 'train7': return w7.length? w7.filter(x=>x.train && x.train!=='none').length : null;
+    case 'med7': return w7.length? num(w7,'med').reduce((a,b)=>a+b,0) : null;
+    case 'logged14': { const w=dailyWindow(end,14); return w.length? w.length : null; }
+  }
+  return null;
+}
+function derivedVal(k, date){
+  const g = key => latestOn(key,date)?.v;
+  const h = +S.profile.height;
+  switch(k){
+    case 'whtr': { const w=g('waist'); return (w&&h)? w/h : null; }
+    case 'bmi': { const w=g('weight'); return (w&&h)? w/((h/100)**2) : null; }
+    case 'vo2': { const c=g('cooper'); return c? (c-504.9)/44.73 : null; }
+    case 'homa': { // same-day pair
+      const s=Object.keys(S.days).sort().filter(d=>d<=date && S.days[d].m?.fglu!=null && S.days[d].m?.finsulin!=null);
+      if(!s.length) return null; const m=S.days[s[s.length-1]].m; return m.fglu*m.finsulin/405; }
+  }
+  return null;
+}
+function derivedSeries(m){
+  const trig = {whtr:['waist','weight'], bmi:['weight'], vo2:['cooper'], homa:['fglu','finsulin']}[m.k] || [];
+  const dates = new Set(); trig.forEach(t=>seriesOf(t).forEach(x=>dates.add(x.d)));
+  if(m.k==='whtr') { dates.clear(); seriesOf('waist').forEach(x=>dates.add(x.d)); }
+  return [...dates].sort().map(d=>({d, v:derivedVal(m.k,d)})).filter(x=>x.v!=null);
+}
+function dailySeries(m){
+  const cs=checkins(); if(!cs.length) return [];
+  const out=[]; const first=cs[0].d, last=today();
+  for(let d=first; d<=last; d=addDays(d,1)){ if(S.days[d]?.c){ const v=dailyVal(m.k,d); if(v!=null) out.push({d,v}); } }
+  return out;
+}
+function series(m){
+  if(!derivedCache) derivedCache={};
+  if(derivedCache[m.k]) return derivedCache[m.k];
+  let s;
+  if(m.src==='derived') s=derivedSeries(m);
+  else if(m.src==='daily') s=dailySeries(m);
+  else s=seriesOf(m.k);
+  return derivedCache[m.k]=s;
+}
+function latest(m){ if(m.src==='daily'){ const v=dailyVal(m.k,today()); return v==null? null : {d:today(), v}; } const s=series(m); return s.length? s[s.length-1] : null; }
+
+function statusOf(m, v, date){
+  if(v==null||isNaN(v)) return null;
+  if(m.dir==='none') return null;
+  if(m.dir==='up') return v>=m.good?'good': v>=m.ok?'ok':'bad';
+  if(m.dir==='down') return v<=m.good?'good': v<=m.ok?'ok':'bad';
+  if(m.dir==='range') return (v>=m.good[0]&&v<=m.good[1])?'good': (v>=m.ok[0]&&v<=m.ok[1])?'ok':'bad';
+  if(m.dir==='bw'){ const bw=latestOn('weight',date||today())?.v; if(!bw) return null; const r=v/bw; return r>=m.good?'good': r>=m.ok?'ok':'bad'; }
+  return null;
+}
+function targetText(m){
+  const u=m.u&&!m.u.startsWith('/')?' '+m.u:(m.u||'');
+  if(m.dir==='up') return '≥ '+m.good+u;
+  if(m.dir==='down') return '≤ '+m.good+u;
+  if(m.dir==='range') return m.good[0]+'–'+m.good[1]+u;
+  if(m.dir==='bw') return '≥ '+m.good+'× body weight';
+  return 'Track trend';
+}
+function dueInfo(m){
+  if(m.src==='derived'||m.src==='daily'||m.cad==null) return null;
+  const l=latest(m);
+  if(!l) return {due:true, never:true, days:null};
+  if(m.cad===0) return {due:false};
+  const next=addDays(l.d,m.cad); const dd=daysBetween(today(),next);
+  return {due: dd<=0, days:dd, next};
+}
+function pillarScore(pk){
+  const ms=M.filter(m=>m.p===pk); let pts=[];
+  ms.forEach(m=>{ const l=latest(m); const st=l&&statusOf(m,l.v,l.d); if(st) pts.push(st==='good'?1:st==='ok'?.5:0); });
+  return {score: pts.length? Math.round(avg(pts)*100) : null, n:pts.length, of:ms.length};
+}
+
+/* ============ Charts ============ */
+function sparkSVG(m, s, w=220, h=36){
+  if(s.length<1) return `<svg class="spark" viewBox="0 0 ${w} ${h}" aria-hidden="true"><line x1="0" y1="${h/2}" x2="${w}" y2="${h/2}" stroke="var(--line)" stroke-dasharray="3 3"/></svg>`;
+  const vs=s.map(x=>x.v); let lo=Math.min(...vs), hi=Math.max(...vs);
+  if(lo===hi){ lo-=1; hi+=1; }
+  const t0=parseD(s[0].d)/1, t1=Math.max(parseD(s[s.length-1].d)/1, t0+864e5);
+  const X=d=> s.length===1? w-4 : 4+(parseD(d)-t0)/(t1-t0)*(w-8);
+  const Y=v=> h-4-(v-lo)/(hi-lo)*(h-8);
+  const pts=s.map(x=>X(x.d).toFixed(1)+','+Y(x.v).toFixed(1));
+  const last=s[s.length-1]; const st=statusOf(m,last.v,last.d)||'none';
+  const col = st==='good'?'var(--good)':st==='ok'?'var(--ok)':st==='bad'?'var(--bad)':'var(--accent)';
+  const area = s.length>1 ? `<path d="M${pts[0].split(',')[0]},${h} L${pts.join(' L')} L${pts[pts.length-1].split(',')[0]},${h} Z" fill="var(--accent-soft)" opacity=".7"/>` : '';
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" aria-hidden="true">${area}<polyline points="${pts.join(' ')}" fill="none" stroke="var(--accent)" stroke-width="1.6" /><circle cx="${X(last.d)}" cy="${Y(last.v)}" r="3.5" fill="${col}"/></svg>`;
+}
+function bigChart(m, s){
+  const W=480, H=240, L=48, R=14, T=14, B=30;
+  if(!s.length) return '<p class="muted small">No data yet.</p>';
+  let vs=s.map(x=>x.v);
+  let band=null;
+  if(m.dir==='range') band=m.good;
+  else if(m.dir==='up') band=[m.good, null];
+  else if(m.dir==='down') band=[null, m.good];
+  else if(m.dir==='bw'){ const bw=latestOn('weight',today())?.v; if(bw) band=[m.good*bw,null]; }
+  let lo=Math.min(...vs), hi=Math.max(...vs);
+  if(band){ if(band[0]!=null){lo=Math.min(lo,band[0]); hi=Math.max(hi,band[0]);} if(band[1]!=null){lo=Math.min(lo,band[1]); hi=Math.max(hi,band[1]);} }
+  const padv=(hi-lo)*0.12 || 1; lo-=padv; hi+=padv;
+  const t0=+parseD(s[0].d), t1=Math.max(+parseD(s[s.length-1].d), t0+864e5*7);
+  const X=d=> L+(parseD(d)-t0)/(t1-t0)*(W-L-R);
+  const Y=v=> T+(1-(v-lo)/(hi-lo))*(H-T-B);
+  // ticks
+  const step = niceStep((hi-lo)/4); let ticks=[]; for(let v=Math.ceil(lo/step)*step; v<=hi; v+=step) ticks.push(+v.toFixed(6));
+  let g='';
+  ticks.forEach(v=>{ g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${Y(v)+4}" text-anchor="end" font-size="14" fill="var(--muted)">${fmtTick(v)}</text>`; });
+  let bandEl='';
+  if(band){ const y1=band[1]!=null?Y(band[1]):T, y2=band[0]!=null?Y(band[0]):H-B; bandEl=`<rect x="${L}" y="${Math.min(y1,y2)}" width="${W-L-R}" height="${Math.abs(y2-y1)}" fill="var(--band)"/>`; }
+  const pts=s.map(x=>X(x.d).toFixed(1)+','+Y(x.v).toFixed(1));
+  const dots=s.map(x=>{ const st=statusOf(m,x.v,x.d); const c=st==='good'?'var(--good)':st==='ok'?'var(--ok)':st==='bad'?'var(--bad)':'var(--accent)'; return `<circle cx="${X(x.d)}" cy="${Y(x.v)}" r="${s.length>40?3:5}" fill="${c}"><title>${fmtD(x.d)}: ${fmtV(m,x.v)} ${esc(m.u)}</title></circle>`; }).join('');
+  const xl=`<text x="${L}" y="${H-8}" font-size="14" fill="var(--muted)">${fmtD(s[0].d)}</text><text x="${W-R}" y="${H-8}" text-anchor="end" font-size="14" fill="var(--muted)">${fmtD(s[s.length-1].d)}</text>`;
+  return `<div class="tablewrap"><svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:300px;height:auto;display:block" role="img" aria-label="${esc(m.n)} over time">${bandEl}${g}<polyline points="${pts.join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2"/>${dots}${xl}</svg></div><p class="small muted">Shaded band = target zone.</p>`;
+}
+function niceStep(x){ const p=Math.pow(10,Math.floor(Math.log10(x||1))); const f=x/p; return (f<1.5?1:f<3?2:f<7?5:10)*p; }
+function fmtTick(v){ return Math.abs(v)>=100? Math.round(v) : +v.toFixed(2); }
+
+/* ============ Tabs ============ */
+const ICONS = {
+  today:'<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>',
+  tests:'<svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/><path d="M7.5 15h9"/></svg>',
+  trends:'<svg viewBox="0 0 24 24"><path d="M3 20h18"/><path d="M4 16l5-6 4 3 7-8"/></svg>',
+  review:'<svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg>',
+  guide:'<svg viewBox="0 0 24 24"><path d="M5 4h10l4 4v12H5z"/><path d="M14 4v5h5M8 13h8M8 16h6"/></svg>',
+};
+const TABS=[['today','Today'],['tests','Tests'],['trends','Trends'],['review','Review'],['guide','Guide']];
+let tab='today';
+try{ const h=location.hash.slice(1); if(TABS.some(t=>t[0]===h)) tab=h; else { const t=localStorage.getItem('hl-tab'); if(t && TABS.some(x=>x[0]===t)) tab=t; } }catch(e){}
+function renderTabs(){
+  $('#tabs').innerHTML = TABS.map(([k,n])=>`<button type="button" data-tab="${k}" aria-selected="${k===tab}">${ICONS[k]}<span>${n}</span></button>`).join('');
+}
+$('#tabs').addEventListener('click',e=>{ const b=e.target.closest('button[data-tab]'); if(!b) return; tab=b.dataset.tab; try{localStorage.setItem('hl-tab',tab);}catch(e){} renderTabs(); renderMain(); window.scrollTo(0,0); });
+
+function renderMain(){
+  derivedCache=null;
+  const f={today:renderToday, tests:renderTests, trends:renderTrends, review:renderReview, guide:renderGuide}[tab];
+  f();
+}
+function refreshLive(){ // called on data change without clobbering forms
+  derivedCache=null;
+  document.querySelectorAll('[data-live]').forEach(el=>{ const fn=LIVE[el.dataset.live]; if(fn) el.innerHTML=fn(); });
+  if(tab==='trends') renderTrendsBody();
+}
+const LIVE = {};
+
+/* ============ TODAY ============ */
+let checkDate = today();
+LIVE.pillars = () => PILLARS.map(p=>{ const s=pillarScore(p.k); return `<div class="p"><div class="eyebrow">${p.n}</div><div class="v">${s.score==null?'—':s.score}</div><div class="meter"><i style="width:${s.score||0}%"></i></div><div class="small muted">${s.n} of ${s.of} measured</div></div>`; }).join('');
+LIVE.due = () => {
+  const due=M.map(m=>({m,i:dueInfo(m)})).filter(x=>x.i&&x.i.due);
+  const never=due.filter(x=>x.i.never), over=due.filter(x=>!x.i.never);
+  if(!due.length) return '<p class="muted small">Nothing due. Next retests show here when their window opens.</p>';
+  const chip = x=>`<button type="button" class="pill ${x.i.never?'due':'ok'}" data-goto="${x.m.c}" style="cursor:pointer;border:0">${esc(x.m.n)}${x.i.never?'':' · '+(-x.i.days)+'d over'}</button>`;
+  let h='';
+  if(over.length) h+=`<div class="eyebrow" style="margin-bottom:6px">Retest due</div><div class="duelist">${over.map(chip).join('')}</div>`;
+  if(never.length) h+=`<div class="eyebrow" style="margin:${over.length?12:0}px 0 6px">Baseline not taken yet · ${never.length}</div><div class="duelist">${never.map(chip).join('')}</div>`;
+  return h;
+};
+LIVE.week = () => {
+  const ks=['sleep7','mood7','stress7','deepwork','zone2','train7','hard7','med7'];
+  return `<div class="kv">${ks.map(k=>{ const m=MK[k]; const l=latest(m); const st=l&&statusOf(m,l.v); return `<div><span class="small muted"><span class="dot ${st||''}"></span> ${esc(m.n.replace(', 7-day avg',''))}</span><b>${l?fmtV(m,l.v):'—'}<span class="small muted" style="font-weight:400"> ${esc(m.u)}</span></b></div>`; }).join('')}</div>`;
+};
+function renderToday(){
+  const d=new Date();
+  $('#todayLbl').textContent = d.toLocaleDateString(undefined,{weekday:'long', day:'numeric', month:'long'});
+  $('#main').innerHTML = `<section class="panel">
+    <div class="pillars" data-live="pillars">${LIVE.pillars()}</div>
+    <div class="card"><div class="row between" style="margin-bottom:10px"><h2>Daily check-in</h2>
+      <input type="date" id="ciDate" value="${checkDate}" max="${today()}" style="width:auto"></div>
+      <form id="ciForm" class="grid" style="gap:14px"></form></div>
+    <div class="card"><div class="row between" style="margin-bottom:10px"><h2>Last 7 days</h2><span class="small muted">From your check-ins</span></div><div data-live="week">${LIVE.week()}</div></div>
+    <div class="card"><h2 style="margin-bottom:10px">Tests to do</h2><div data-live="due">${LIVE.due()}</div></div>
+  </section>`;
+  fillCheckin();
+  $('#ciDate').addEventListener('change',e=>{ checkDate=e.target.value||today(); fillCheckin(); });
+}
+function scaleHTML(id,label,lo,hi,val,lowTxt,hiTxt){
+  let b=''; for(let i=lo;i<=hi;i++) b+=`<button type="button" data-v="${i}" aria-pressed="${+val===i}">${i}</button>`;
+  return `<div class="f" style="display:grid;gap:4px"><div class="row between small muted"><span>${label}</span><span class="small" style="color:var(--faint)">${lowTxt} → ${hiTxt}</span></div><div class="scale" data-scale="${id}">${b}</div></div>`;
+}
+function fillCheckin(){
+  const day=getDay(checkDate); const c=day.c||{}; const m=day.m||{};
+  const f=$('#ciForm');
+  f.innerHTML = `
+    <div class="form2">
+      <label class="f">Sleep last night (h)<input id="ci_sleep" type="number" step="0.25" min="0" max="16" inputmode="decimal" value="${c.sleep??''}"></label>
+      <label class="f">Morning pulse (bpm)<input id="ci_rhr" type="number" min="30" max="130" inputmode="numeric" value="${m.rhr??''}" placeholder="optional"></label>
+      <label class="f">Weight (kg)<input id="ci_weight" type="number" step="0.1" inputmode="decimal" value="${m.weight??''}" placeholder="optional"></label>
+      <label class="f">Steps<input id="ci_steps" type="number" inputmode="numeric" value="${c.steps??''}" placeholder="from iPhone Health"></label>
+    </div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+      ${scaleHTML('sleepq','Sleep quality',1,5,c.sleepq,'poor','great')}
+      ${scaleHTML('mood','Mood',1,5,c.mood,'low','great')}
+      ${scaleHTML('energy','Energy',1,5,c.energy,'drained','charged')}
+      ${scaleHTML('stress','Stress',1,5,c.stress,'calm','overwhelmed')}
+    </div>
+    <div class="form2">
+      <label class="f">Training<select id="ci_train">${['none','strength','cardio','both','sport','rest/mobility'].map(o=>`<option ${c.train===o?'selected':''}>${o}</option>`).join('')}</select></label>
+      <label class="f">Cardio minutes<input id="ci_cardio" type="number" min="0" inputmode="numeric" value="${c.cardio??''}"></label>
+      <label class="f">Deep work (h)<input id="ci_deep" type="number" step="0.5" min="0" inputmode="decimal" value="${c.deep??''}"></label>
+      <label class="f">Meditation (min)<input id="ci_med" type="number" min="0" inputmode="numeric" value="${c.med??''}"></label>
+    </div>
+    <div class="checks">
+      <label><input type="checkbox" id="ci_hard" ${c.hard?'checked':''}> Did one hard thing</label>
+      <label><input type="checkbox" id="ci_sun" ${c.sun?'checked':''}> Morning daylight 10+ min</label>
+      <label><input type="checkbox" id="ci_protein" ${c.protein?'checked':''}> Hit protein target</label>
+      <label><input type="checkbox" id="ci_screens" ${c.screens?'checked':''}> No screens last hour</label>
+      <label><input type="checkbox" id="ci_alcohol" ${c.alcohol?'checked':''}> Alcohol</label>
+    </div>
+    <label class="f">Note (what was the hard thing, how you felt, anything unusual)<textarea id="ci_note">${esc(c.note||'')}</textarea></label>
+    <div class="row between"><span class="small muted">${day.c?'Saved '+fmtD(checkDate)+'. Saving again overwrites it.':'Not logged yet for '+fmtD(checkDate)+'.'}</span><button class="btn primary" type="submit">Save day</button></div>`;
+  f.querySelectorAll('[data-scale]').forEach(sc=>sc.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const on=b.getAttribute('aria-pressed')==='true'; sc.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed','false')); if(!on) b.setAttribute('aria-pressed','true'); }));
+  f.onsubmit = e=>{ e.preventDefault();
+    const num=id=>{ const v=$('#'+id).value; return v===''? null : +v; };
+    const sv=id=>{ const b=f.querySelector(`[data-scale="${id}"] button[aria-pressed="true"]`); return b? +b.dataset.v : null; };
+    const day=getDay(checkDate);
+    day.c={ sleep:num('ci_sleep'), steps:num('ci_steps'), sleepq:sv('sleepq'), mood:sv('mood'), energy:sv('energy'), stress:sv('stress'),
+      train:$('#ci_train').value, cardio:num('ci_cardio'), deep:num('ci_deep'), med:num('ci_med'),
+      hard:$('#ci_hard').checked, sun:$('#ci_sun').checked, protein:$('#ci_protein').checked, screens:$('#ci_screens').checked, alcohol:$('#ci_alcohol').checked,
+      note:$('#ci_note').value.trim().slice(0,2000) };
+    day.m=day.m||{};
+    const rhr=num('ci_rhr'), wt=num('ci_weight');
+    if(rhr!=null) day.m.rhr=rhr; else delete day.m.rhr;
+    if(wt!=null) day.m.weight=wt; else delete day.m.weight;
+    saveDay(checkDate, day).then(()=>{ toast('Saved '+fmtD(checkDate)); refreshLive(); fillCheckin(); });
+  };
+}
+document.addEventListener('click',e=>{ const g=e.target.closest('[data-goto]'); if(!g) return; testCat=g.dataset.goto; tab='tests'; renderTabs(); renderMain(); window.scrollTo(0,0); });
+
+/* ============ TESTS ============ */
+let testCat='body', testDate=today();
+function renderTests(){
+  const cats=CATS.filter(c=>c.k!=='habits');
+  $('#main').innerHTML = `<section class="panel">
+    <div class="card grid" style="gap:12px">
+      <div class="row between"><h2>Log a test session</h2><input type="date" id="tDate" value="${testDate}" max="${today()}" style="width:auto"></div>
+      <div class="chips" role="group" aria-label="Category">${cats.map(c=>`<button type="button" class="chip" data-cat="${c.k}" aria-pressed="${c.k===testCat}">${c.n}</button>`).join('')}</div>
+    </div>
+    <div id="tBody"></div>
+  </section>`;
+  $('#tDate').addEventListener('change',e=>{ testDate=e.target.value||today(); renderTestBody(); });
+  $('#main .chips').addEventListener('click',e=>{ const b=e.target.closest('[data-cat]'); if(!b) return; testCat=b.dataset.cat; $('#main .chips').querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed', x===b)); renderTestBody(); });
+  renderTestBody();
+}
+function parseInputVal(m, raw){
+  raw=String(raw).trim().replace(',','.'); if(raw==='') return null;
+  const mm=raw.match(/^(\d+(?:\.\d+)?)\s*[x×*]\s*(\d+)$/i);
+  if(m.rep && mm){ const w=+mm[1], r=+mm[2]; return Math.round(w*(1+r/30)*10)/10; }
+  const v=+raw; return isNaN(v)? NaN : v;
+}
+function renderTestBody(){
+  const el=$('#tBody'); const day=getDay(testDate);
+  const ms=M.filter(m=>m.c===testCat && m.src!=='derived' && m.src!=='daily');
+  const derived=M.filter(m=>m.c===testCat && (m.src==='derived'));
+  let extra='';
+  if(testCat==='cognition') extra=reactionHTML()+digitHTML();
+  if(testCat==='mind') extra=questionnaireHTML('who5')+questionnaireHTML('pss');
+  if(testCat==='body' && !S.profile.height) extra=`<div class="banner">Add your height in Review → Profile so BMI and waist ÷ height can be computed.</div>`;
+  const rows=ms.map(m=>{ const l=latest(m); const di=dueInfo(m); const cur=day.m?.[m.k];
+    return `<div class="mrow"><div><div class="row" style="gap:6px"><h3>${esc(m.n)}</h3>${di&&di.due?`<span class="pill ${di.never?'due':'ok'}">${di.never?'baseline':'due'}</span>`:''}</div>
+      <div class="how">${esc(m.how)}</div>
+      <div class="small muted" style="margin-top:2px">Target ${esc(targetText(m))}${l?` · last <span class="mono">${fmtV(m,l.v)}</span> on ${fmtD(l.d)}`:''}</div></div>
+      <label class="f"><span class="unit">${esc(m.u)}${m.rep?' · or 80x5':''}</span><input id="t_${m.k}" ${m.rep?'type="text" inputmode="text"':'type="number" step="any" inputmode="decimal"'} value="${cur??''}" aria-label="${esc(m.n)}"></label></div>`; }).join('');
+  el.innerHTML = `${extra}<div class="card"><div class="mlist">${rows}</div>
+    ${derived.length?`<p class="small muted" style="margin-top:8px">Computed automatically: ${derived.map(m=>esc(m.n)).join(', ')}.</p>`:''}
+    <div class="row between" style="margin-top:12px"><span class="small muted">Saved to ${fmtD(testDate)}. Leave a box blank to skip it.</span><button class="btn primary" id="tSave" type="button">Save results</button></div></div>`;
+  $('#tSave').onclick=()=>{
+    const day=getDay(testDate); day.m=day.m||{}; let bad=[];
+    ms.forEach(m=>{ const v=parseInputVal(m, $('#t_'+m.k).value); if(v===null) delete day.m[m.k]; else if(isNaN(v)) bad.push(m.n); else day.m[m.k]=v; });
+    if(bad.length){ toast('Check the number for: '+bad.join(', ')); return; }
+    if(!day.c && !Object.keys(day.m).length){ deleteDay(testDate).then(()=>{toast('Cleared '+fmtD(testDate)); renderTestBody();}); return; }
+    saveDay(testDate, day).then(()=>{ toast('Saved results for '+fmtD(testDate)); renderTestBody(); });
+  };
+  bindReaction(); bindDigit(); bindQ();
+}
+
+/* Reaction test */
+let RT={state:'idle', trials:[], t0:0, timer:null};
+function reactionHTML(){ return `<div class="card grid" style="gap:10px"><div class="row between"><h3>Reaction time test</h3><span class="small muted">5 taps · median</span></div>
+  <div class="testbox" id="rtBox" role="button" tabindex="0">Tap to start</div><div class="small muted" id="rtLog">Tap when the box turns green. Tapping early restarts that trial.</div></div>`; }
+function bindReaction(){
+  const box=$('#rtBox'); if(!box) return; RT={state:'idle',trials:[],t0:0,timer:null};
+  const arm=()=>{ RT.state='wait'; box.className='testbox wait'; box.textContent='Wait for green…'; RT.timer=setTimeout(()=>{ RT.state='go'; RT.t0=performance.now(); box.className='testbox go'; box.textContent='TAP!'; }, 1200+Math.random()*2800); };
+  const hit=e=>{ e.preventDefault();
+    if(RT.state==='idle'||RT.state==='done'){ RT.trials=[]; $('#rtLog').textContent='Trial 1 of 5'; arm(); return; }
+    if(RT.state==='wait'){ clearTimeout(RT.timer); box.className='testbox'; box.textContent='Too early — tap to retry'; RT.state='idle-retry'; return; }
+    if(RT.state==='idle-retry'){ arm(); return; }
+    if(RT.state==='go'){ const ms=Math.round(performance.now()-RT.t0); RT.trials.push(ms);
+      if(RT.trials.length>=5){ const s=[...RT.trials].sort((a,b)=>a-b); const med=s[2]; RT.state='done'; box.className='testbox'; box.innerHTML=`<div><div class="digits">${med} ms</div><div class="small muted">median · tap to redo</div></div>`; $('#rtLog').textContent='Trials: '+RT.trials.join(', ')+' ms. Filled into the Reaction time box below — press Save results.'; const i=$('#t_reaction'); if(i) i.value=med; }
+      else { box.className='testbox'; box.textContent=ms+' ms — tap for next'; RT.state='idle-retry'; $('#rtLog').textContent='Trial '+(RT.trials.length+1)+' of 5'; } }
+  };
+  box.addEventListener('pointerdown',hit);
+  box.addEventListener('keydown',e=>{ if(e.key===' '||e.key==='Enter') hit(e); });
+}
+/* Digit span */
+let DS={};
+function digitHTML(){ return `<div class="card grid" style="gap:10px"><div class="row between"><h3>Digit span test</h3><span class="small muted">~3 min</span></div>
+  <div class="testbox" id="dsBox" style="cursor:default"><button class="btn primary" type="button" id="dsStart">Start</button></div>
+  <form id="dsForm" class="row" hidden><input id="dsIn" inputmode="numeric" autocomplete="off" placeholder="Type the digits in order" style="flex:1"><button class="btn primary" type="submit">Check</button></form>
+  <div class="small muted" id="dsLog">Digits flash one per second. Type them back in order. Starts at 4; two misses at the same length ends the test.</div></div>`; }
+function bindDigit(){
+  const st=$('#dsStart'); if(!st) return;
+  const box=$('#dsBox'), form=$('#dsForm'), inp=$('#dsIn'), log=$('#dsLog');
+  const run=()=>{ DS.seq=Array.from({length:DS.len},()=>Math.floor(Math.random()*10)).join(''); form.hidden=true; let i=0;
+    box.innerHTML='<span class="digits">·</span>';
+    const tick=()=>{ if(i<DS.seq.length){ box.innerHTML=`<span class="digits">${DS.seq[i]}</span>`; i++; setTimeout(()=>{ box.innerHTML='<span class="digits">&nbsp;</span>'; setTimeout(tick,200); },800); } else { box.innerHTML=`<span class="small muted">Length ${DS.len} — type it</span>`; form.hidden=false; inp.value=''; inp.focus(); } };
+    setTimeout(tick,500); };
+  st.onclick=()=>{ DS={len:4,miss:0,best:0}; log.textContent='Length 4'; run(); };
+  form.onsubmit=e=>{ e.preventDefault(); const ok=inp.value.replace(/\D/g,'')===DS.seq;
+    if(ok){ DS.best=DS.len; DS.len++; DS.miss=0; log.textContent='Correct. Length '+DS.len; run(); }
+    else { DS.miss++; if(DS.miss>=2){ form.hidden=true; box.innerHTML=`<div><div class="digits">${DS.best}</div><div class="small muted">digit span · filled below</div></div>`; log.textContent='Done. Last sequence was '+DS.seq+'. Press Save results to keep it.'; const i=$('#t_digitspan'); if(i) i.value=DS.best; }
+      else { log.textContent='Missed ('+DS.seq+'). One more try at length '+DS.len; run(); } } };
+}
+/* Questionnaires */
+const QS={
+  who5:{title:'WHO-5 wellbeing', lead:'Over the last 2 weeks…', opts:['At no time','Some of the time','Less than half','More than half','Most of the time','All of the time'], vals:[0,1,2,3,4,5],
+    items:['I have felt cheerful and in good spirits','I have felt calm and relaxed','I have felt active and vigorous','I woke up feeling fresh and rested','My daily life has been filled with things that interest me'],
+    score:a=>a.reduce((x,y)=>x+y,0)*4},
+  pss:{title:'Perceived Stress Scale (PSS-10)', lead:'In the last month, how often have you…', opts:['Never','Almost never','Sometimes','Fairly often','Very often'], vals:[0,1,2,3,4], rev:[3,4,6,7],
+    items:['been upset because of something that happened unexpectedly?','felt that you were unable to control the important things in your life?','felt nervous and stressed?','felt confident about your ability to handle your personal problems?','felt that things were going your way?','found that you could not cope with all the things you had to do?','been able to control irritations in your life?','felt that you were on top of things?','been angered because of things outside of your control?','felt difficulties were piling up so high that you could not overcome them?'],
+    score:a=>a.reduce((x,y,i)=>x+(QS.pss.rev.includes(i)?4-y:y),0)},
+};
+function questionnaireHTML(k){ const q=QS[k];
+  return `<div class="card" data-q="${k}"><div class="row between"><h3>${q.title}</h3><span class="small muted" data-qout>0 of ${q.items.length} answered</span></div><p class="small muted" style="margin:4px 0 6px">${q.lead}</p>
+  ${q.items.map((it,i)=>`<div class="q"><div class="small">${i+1}. ${esc(it)}</div><div class="opts" data-i="${i}">${q.opts.map((o,j)=>`<button type="button" data-v="${q.vals[j]}" aria-pressed="false">${esc(o)}</button>`).join('')}</div></div>`).join('')}</div>`; }
+function bindQ(){
+  document.querySelectorAll('[data-q]').forEach(card=>{ const k=card.dataset.q, q=QS[k];
+    card.addEventListener('click',e=>{ const b=e.target.closest('.opts button'); if(!b) return; b.parentElement.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed','false')); b.setAttribute('aria-pressed','true');
+      const ans=[...card.querySelectorAll('.opts')].map(o=>{ const s=o.querySelector('[aria-pressed="true"]'); return s? +s.dataset.v : null; });
+      const n=ans.filter(x=>x!=null).length; const out=card.querySelector('[data-qout]');
+      if(n<q.items.length){ out.textContent=n+' of '+q.items.length+' answered'; return; }
+      const sc=q.score(ans); out.innerHTML=`<b class="mono">Score ${sc}</b> · filled below`; const i=$('#t_'+k); if(i) i.value=sc; });
+  });
+}
+
+/* ============ TRENDS ============ */
+let trendCat='all', openMetric=null;
+function renderTrends(){
+  $('#main').innerHTML = `<section class="panel">
+    <div class="chips" role="group" aria-label="Filter">${[{k:'all',n:'All'},{k:'flag',n:'Needs work'},...CATS].map(c=>`<button type="button" class="chip" data-tc="${c.k}" aria-pressed="${c.k===trendCat}">${c.n}</button>`).join('')}</div>
+    <div id="trBody"></div></section>`;
+  $('#main .chips').addEventListener('click',e=>{ const b=e.target.closest('[data-tc]'); if(!b) return; trendCat=b.dataset.tc; openMetric=null; $('#main .chips').querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x===b)); renderTrendsBody(); });
+  renderTrendsBody();
+}
+function renderTrendsBody(){
+  const el=$('#trBody'); if(!el) return; derivedCache=null;
+  let cats = trendCat==='all'||trendCat==='flag' ? CATS : CATS.filter(c=>c.k===trendCat);
+  let html='';
+  cats.forEach(c=>{
+    let ms=M.filter(m=>m.c===c.k);
+    if(trendCat==='flag') ms=ms.filter(m=>{ const l=latest(m); const st=l&&statusOf(m,l.v,l.d); return st==='bad'||st==='ok'; });
+    if(!ms.length) return;
+    html+=`<div class="grid" style="gap:8px"><div class="eyebrow">${c.n}</div><div class="mcards">`;
+    ms.forEach(m=>{ const s=series(m); const l=latest(m); const st=l&&statusOf(m,l.v,l.d); const di=dueInfo(m);
+      html+=`<button type="button" class="mc" data-m="${m.k}" aria-expanded="${openMetric===m.k}"><div class="row between"><span class="small" style="font-weight:600">${esc(m.n)}</span>${st?`<span class="pill ${st}">${st==='good'?'on target':st==='ok'?'close':'off'}</span>`:(di&&di.due?'<span class="pill due">not tested</span>':'')}</div>
+        <div class="val">${l?fmtV(m,l.v):'—'}<small>${esc(m.u)}</small></div>${sparkSVG(m,s)}<div class="small muted">Target ${esc(targetText(m))}${l&&m.src!=='daily'?' · '+fmtD(l.d):''}</div></button>`;
+      if(openMetric===m.k) html+=detailHTML(m,s);
+    });
+    html+='</div></div>';
+  });
+  if(trendCat==='flag' && !html) html='<p class="muted">Nothing flagged. Either everything is on target or you have not measured it yet — check Today for missing baselines.</p>';
+  el.innerHTML=`<div class="grid" style="gap:18px">${html}</div>`;
+}
+function detailHTML(m,s){
+  const rows=[...s].reverse().slice(0,30);
+  const editable = !m.src || m.src==='test';
+  return `<div class="card detail grid" style="gap:10px"><div class="row between"><h3>${esc(m.n)}</h3><button class="btn sm ghost" type="button" data-close>Close</button></div>
+    <p class="small muted prose" style="margin:0">${esc(m.how)}</p>${bigChart(m,s)}
+    ${rows.length?`<div class="tablewrap"><table class="hist"><tbody>${rows.map(x=>{ const st=statusOf(m,x.v,x.d); return `<tr><td>${fmtD(x.d)}</td><td class="mono"><span class="dot ${st||''}"></span> ${fmtV(m,x.v)} ${esc(m.u)}${m.dir==='bw'&&latestOn('weight',x.d)?` <span class="muted">(${(x.v/latestOn('weight',x.d).v).toFixed(2)}× BW)</span>`:''}</td><td>${editable?`<button type="button" class="btn sm ghost" data-del="${m.k}" data-d="${x.d}">Delete</button>`:''}</td></tr>`; }).join('')}</tbody></table></div>`:''}</div>`;
+}
+document.addEventListener('click',e=>{
+  if(tab!=='trends') return;
+  const del=e.target.closest('[data-del]');
+  if(del){ const k=del.dataset.del, d=del.dataset.d;
+    if(del.dataset.armed!=='1'){ del.dataset.armed='1'; del.textContent='Tap to confirm'; setTimeout(()=>{ if(del.isConnected){ del.dataset.armed=''; del.textContent='Delete'; } },3000); return; }
+    const day=getDay(d); delete day.m[k]; const p = (!day.c && !Object.keys(day.m).length)? deleteDay(d) : saveDay(d,day); p.then(()=>{ toast('Deleted'); renderTrendsBody(); }); return; }
+  if(e.target.closest('[data-close]')){ openMetric=null; renderTrendsBody(); return; }
+  const c=e.target.closest('.mc[data-m]'); if(c){ openMetric = openMetric===c.dataset.m? null : c.dataset.m; renderTrendsBody(); }
+});
+
+/* ============ COACH ============ */
+function ageNow(){ const y=+S.profile.birthYear; return y? new Date().getFullYear()-y : null; }
+function snapshotForCoach(){
+  const metrics=[];
+  M.forEach(m=>{ const s=series(m); const l=latest(m); if(!l) return; const prev=s.length>1&&m.src!=='daily'? s[s.length-2] : null;
+    metrics.push({name:m.n, value:+fmtV(m,l.v)||l.v, unit:m.u, date:m.src==='daily'?'last 7 days':l.d, status:statusOf(m,l.v,l.d)||'no target', target:targetText(m), previous: prev? {value:+fmtV(m,prev.v)||prev.v, date:prev.d}: undefined}); });
+  const missing=M.filter(m=>{ const i=dueInfo(m); return i&&i.never; }).map(m=>m.n);
+  const due=M.filter(m=>{ const i=dueInfo(m); return i&&i.due&&!i.never; }).map(m=>m.n);
+  const last7=dailyWindow(today(),7).map(c=>({d:c.d, sleep:c.sleep, mood:c.mood, energy:c.energy, stress:c.stress, train:c.train, cardio:c.cardio, deep:c.deep, hard:c.hard, note:(c.note||'').slice(0,140)}));
+  return { today:today(), profile:{age:ageNow(), sex:S.profile.sex, heightCm:+S.profile.height||null, plannedTrainingDaysPerWeek:+S.profile.trainPlan||null, goals:S.profile.goals||''},
+    pillarScores:Object.fromEntries(PILLARS.map(p=>[p.n, pillarScore(p.k)])), metrics, baselineMissing:missing, retestDue:due, last7DaysCheckins:last7 };
+}
+function mdLite(t){
+  const lines=esc(t).split('\n'); let out='', inList=false;
+  lines.forEach(l=>{ let s=l.trim(); s=s.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+    if(/^[-*•] /.test(s)){ if(!inList){out+='<ul>'; inList=true;} out+='<li>'+s.slice(2)+'</li>'; return; }
+    if(inList){ out+='</ul>'; inList=false; }
+    if(/^#{1,4} /.test(s)) out+='<h4>'+s.replace(/^#+ /,'')+'</h4>'; else if(s) out+='<p>'+s+'</p>'; });
+  if(inList) out+='</ul>'; return out;
+}
+function copyText(text, fallbackEl){
+  const show=()=>{ fallbackEl.innerHTML='Select all and copy:<textarea readonly style="margin-top:6px;min-height:140px">'+esc(text)+'</textarea>'; fallbackEl.querySelector('textarea').select(); };
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(()=>toast('Copied'), show); else show();
+}
+function claudePrompt(){
+  return `You are a direct, evidence-based personal health and performance coach for ${S.profile.name||'me'}, a PhD student. Goals: longevity, cognitive function, strength, happiness, mental fortitude. I prefer honest, grounded, actionable guidance over motivation talk.
+
+My current data (statuses: good = on target, ok = close, bad = off target; "baselineMissing" = tests never done):
+${JSON.stringify(snapshotForCoach())}
+
+Give a weekly review with: 1) Read — what's strong, weakest, most important missing data; 2) This week — max 3 priorities with numbers; 3) Tests to schedule and on which days (no max-strength tests the day after the Cooper run; bloods fasting, not after hard training); 4) One thing to stop or change. Under 300 words. No supplements unless a lab value supports it (name it). If any lab or blood pressure value is clearly out of range, tell me to see a doctor; do not diagnose.`;
+}
+function buildReview(){
+  const out=[]; const T=today();
+  const logged=dailyVal('logged14',T)||0;
+  const ps=PILLARS.map(p=>({...pillarScore(p.k), n:p.n})).filter(p=>p.score!=null).sort((a,b)=>a.score-b.score);
+  const missing=M.filter(m=>{ const i=dueInfo(m); return i&&i.never; });
+  const due=M.filter(m=>{ const i=dueInfo(m); return i&&i.due&&!i.never; });
+  const stat=M.map(m=>{ const l=latest(m); return {m,l,st:l&&statusOf(m,l.v,l.d)}; });
+  const bad=stat.filter(x=>x.st==='bad'), close=stat.filter(x=>x.st==='ok');
+  const v=k=>{ const l=latest(MK[k]); return l? l.v : null; };
+  // Read
+  const read=[];
+  if(ps.length) read.push(`Strongest pillar: <b>${ps[ps.length-1].n}</b> (${ps[ps.length-1].score}). Weakest: <b>${ps[0].n}</b> (${ps[0].score}).`);
+  else read.push('No pillar can be scored yet. Everything below is about getting the baseline done.');
+  if(bad.length) read.push('Off target: '+bad.slice(0,6).map(x=>`<b>${esc(x.m.n)}</b> ${fmtV(x.m,x.l.v)}${x.m.u.startsWith('/')?'':' '}${esc(x.m.u)} (target ${esc(targetText(x.m))})`).join('; ')+'.');
+  if(close.length) read.push('Close to target: '+close.slice(0,6).map(x=>esc(x.m.n)).join(', ')+'.');
+  if(missing.length) read.push(`${missing.length} baseline tests not taken yet.`);
+  read.push(`Check-ins: ${logged} of the last 14 days.${logged<8?' Too few to trust the weekly averages.':''}`);
+  out.push(['Read', read]);
+  // Changes since last test
+  const moves=[];
+  M.filter(m=>!m.src||m.src==='test'||m.src==='derived').forEach(m=>{ const s=series(m); if(s.length<2||m.dir==='none') return;
+    const a=s[s.length-2], b2=s[s.length-1]; const d=b2.v-a.v; if(Math.abs(d)<1e-9) return;
+    const better = m.dir==='down'? d<0 : m.dir==='range'? Math.abs(b2.v-(m.good[0]+m.good[1])/2)<Math.abs(a.v-(m.good[0]+m.good[1])/2) : d>0;
+    moves.push(`${better?'▲':'▼'} ${esc(m.n)}: ${fmtV(m,a.v)} → ${fmtV(m,b2.v)} ${esc(m.u)} <span class="muted">(${better?'better':'worse'}, since ${fmtD(a.d)})</span>`); });
+  if(moves.length) out.push(['Since your last test', moves.slice(0,10)]);
+  // Priorities
+  const pr=[];
+  const labBad=bad.filter(x=>x.m.c==='blood'||x.m.k==='bp_sys'||x.m.k==='bp_dia');
+  if(labBad.length) pr.push(`See a doctor about ${labBad.map(x=>esc(x.m.n)).join(', ')}. Take the report; don't self-treat.`);
+  if(missing.length){ const order=['body','cognition','mind','strength','mobility','heart','blood']; const next=order.flatMap(c=>missing.filter(m=>m.c===c)).slice(0,5);
+    pr.push(`Finish the baseline. Next: ${next.map(m=>esc(m.n)).join(', ')}. Follow the order in Guide → Baseline fortnight.`); }
+  const sl=v('sleep7'); if(sl!=null && sl<7) pr.push(`Sleep averages ${sl.toFixed(1)} h. Fix a wake time and count back 7.5 h for lights-out. This moves reaction time, mood and recovery more than anything else here.`);
+  const z=v('zone2'); if(z!=null && z<150) pr.push(`Cardio is ${Math.round(z)} min this week. Add ${Math.round(150-z)} min of easy zone 2 (you can still talk in full sentences), e.g. ${Math.ceil((150-z)/45)} × 45 min.`);
+  const tr=v('train7'), plan=+S.profile.trainPlan||4; if(tr!=null && tr<plan) pr.push(`Trained ${tr} of ${plan} planned days. Put the sessions in your calendar as fixed blocks before the week fills up.`);
+  const st=v('stress7'); if(st!=null && st>3.2) pr.push(`Stress averages ${st.toFixed(1)}/5. Protect 10 min of meditation daily and one fully off evening.`);
+  const hd=v('hard7'); if(hd!=null && hd<5) pr.push(`Hard thing done on ${hd} of 7 days. Pick tomorrow's hard thing tonight and write it in the note.`);
+  const w5=v('who5'); if(w5!=null && w5<=28) pr.unshift('WHO-5 is 28 or below. Talk to a doctor or the campus counselling centre this week. That comes before any training goal.');
+  if(!pr.length) pr.push('No red flags from the data. Keep the routine and retest on schedule. Progress comes from the next quarter of consistency, not from changes this week.');
+  out.push(['This week', pr.slice(0,4)]);
+  if(due.length) out.push(['Retests due', [due.map(m=>esc(m.n)).join(', ')+'. Space them out: strength and the Cooper run on different days, blood draw on a rest-day morning.']]);
+  return out.map(([h,items])=>`<h4>${h}</h4><ul>${items.map(i=>'<li>'+i+'</li>').join('')}</ul>`).join('');
+}
+function renderReview(){
+  const p=S.profile;
+  $('#main').innerHTML = `<section class="panel">
+    <div class="card grid" style="gap:10px">
+      <div class="row between"><h2>Weekly review</h2><span class="small muted">Rule-based · from your data</span></div>
+      <div class="coach-out" data-live="review">${buildReview()}</div>
+      <div class="row between" style="border-top:1px solid var(--line);padding-top:10px"><span class="small muted">Want Claude's take? Copy your data, then paste it into the Claude app.</span><button class="btn" id="copyClaude" type="button">Copy for Claude</button></div>
+      <div id="copyOut" class="small"></div>
+    </div>
+    <div class="card grid" style="gap:12px"><h2>Profile</h2>
+      <div class="form2">
+        <label class="f">Name<input id="p_name" value="${esc(p.name||'')}"></label>
+        <label class="f">Birth year<input id="p_by" type="number" inputmode="numeric" value="${p.birthYear||''}"></label>
+        <label class="f">Height (cm)<input id="p_h" type="number" step="0.5" inputmode="decimal" value="${p.height||''}"></label>
+        <label class="f">Sex (sets targets context)<select id="p_sex">${['male','female'].map(o=>`<option ${p.sex===o?'selected':''}>${o}</option>`).join('')}</select></label>
+        <label class="f">Planned training days / week<input id="p_tp" type="number" min="0" max="7" value="${p.trainPlan||''}"></label>
+      </div>
+      <label class="f">Goals and constraints<textarea id="p_goals" placeholder="e.g. Get VO₂max to 50 by Jun 2027. Lab days are long on Tue/Thu.">${esc(p.goals||'')}</textarea></label>
+      <div class="row between"><span class="small muted">Targets in this app are set for adult men 20–39.</span><button class="btn primary" id="pSave" type="button">Save profile</button></div>
+    </div>
+    <div class="card grid" style="gap:12px"><div class="row between"><h2>Sync to GitHub</h2><span class="small" data-live="syncmini">${syncMini()}</span></div>
+      <p class="small muted prose" style="margin:0">Data is saved as JSON in a <b>private</b> repo you own, one file per year, with every change kept in git history. The token is stored only on this device. Each device (Safari, the home-screen app, each PC browser) needs it entered once.</p>
+      <div class="form2">
+        <label class="f">GitHub username<input id="g_owner" autocapitalize="off" autocorrect="off" spellcheck="false" value="${esc(CFG.owner)}"></label>
+        <label class="f">Private data repo<input id="g_repo" autocapitalize="off" autocorrect="off" spellcheck="false" value="${esc(CFG.repo)}"></label>
+        <label class="f">Branch<input id="g_branch" autocapitalize="off" autocorrect="off" spellcheck="false" value="${esc(CFG.branch)}"></label>
+      </div>
+      <label class="f">Fine-grained token (Contents: read and write, this repo only)<input id="g_token" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${CFG.token?'•••••••• saved on this device':'github_pat_…'}"></label>
+      <div class="row"><button class="btn primary" id="gConnect" type="button">Connect and sync</button><button class="btn" id="gSync" type="button" ${connected()?'':'disabled'}>Sync now</button><button class="btn ghost" id="gForget" type="button" ${CFG.token?'':'hidden'}>Remove token from this device</button></div>
+      <div class="small" id="gMsg"></div>
+    </div>
+    <div class="card grid" style="gap:10px"><h2>Backup</h2>
+      <p class="small muted" style="margin:0">GitHub is the main backup. A JSON export is a second copy you control. Import also accepts the export from the earlier claude.ai version.</p>
+      <div class="row"><button class="btn" id="expBtn" type="button">Export JSON</button><label class="btn" for="impFile" style="display:inline-block">Import JSON</label><input type="file" id="impFile" accept="application/json,.json" hidden></div>
+      <div class="small muted" id="bkMsg"></div>
+    </div>
+  </section>`;
+  $('#copyClaude').onclick=()=>copyText(claudePrompt(), $('#copyOut'));
+  $('#pSave').onclick=()=>{ Object.assign(S.profile,{name:$('#p_name').value.trim(), birthYear:+$('#p_by').value||'', height:+$('#p_h').value||'', sex:$('#p_sex').value, trainPlan:+$('#p_tp').value||'', goals:$('#p_goals').value.trim().slice(0,1500)}); derivedCache=null; saveProfile().then(()=>{ toast('Profile saved'); refreshLive(); }); };
+  $('#gConnect').onclick=async()=>{
+    const t=$('#g_token').value.trim();
+    Object.assign(CFG,{owner:$('#g_owner').value.trim(), repo:$('#g_repo').value.trim(), branch:$('#g_branch').value.trim()||'main'}); if(t) CFG.token=t;
+    if(!connected()){ $('#gMsg').textContent='Fill in username, repo and token.'; return; }
+    lsSet('cfg',CFG); $('#gMsg').textContent='Checking the repo…';
+    try{ await checkRepo(); lsSet('cfg',CFG); $('#gMsg').innerHTML='<span style="color:var(--good)">Connected to a private repo.</span> Pulling your data…'; await pull(); $('#gMsg').innerHTML = S.err? `<span style="color:var(--bad)">${esc(S.err)}</span>` : '<span style="color:var(--good)">Connected and synced.</span>'; $('#g_token').value=''; }
+    catch(e){ $('#gMsg').innerHTML=`<span style="color:var(--bad)">${esc(e.message)}</span>`; }
+  };
+  $('#gSync').onclick=async()=>{ await pull(); $('#gMsg').innerHTML = S.err? `<span style="color:var(--bad)">${esc(S.err)}</span>` : 'Synced.'; };
+  $('#gForget').onclick=e=>{ const b=e.currentTarget; if(b.dataset.armed!=='1'){ b.dataset.armed='1'; b.textContent= pendingCount()? `Tap again — ${pendingCount()} unsynced changes stay on this device only` : 'Tap again to confirm'; return; } CFG.token=''; lsSet('cfg',CFG); setSync(); renderMain(); toast('Token removed from this device'); };
+  $('#expBtn').onclick=()=>{
+    const data=JSON.stringify({app:'baseline-logbook', schema:SCHEMA, exported:new Date().toISOString(), profile:S.profile, days:S.days},null,1);
+    const fn='baseline-logbook-'+today()+'.json';
+    try{ const url=URL.createObjectURL(new Blob([data],{type:'application/json'})); const a=document.createElement('a'); a.href=url; a.download=fn; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),4000); }
+    catch(e){ copyText(data, $('#bkMsg')); }
+  };
+  $('#impFile').onchange=async e=>{
+    const f=e.target.files[0]; if(!f) return;
+    try{ const o=JSON.parse(await f.text()); if(!o.days) throw 0;
+      const ds=Object.keys(o.days).filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d));
+      if(o.profile){ Object.assign(S.profile,o.profile); pend.profile=true; }
+      ds.forEach(d=>{ const cur=getDay(d), inc=o.days[d]||{}; const merged={date:d, c: inc.c||cur.c||null, m:{...(cur.m||{}), ...(inc.m||{})}}; S.days[d]=merged; pend.days[d]=merged; });
+      derivedCache=null; persist(); scheduleFlush();
+      $('#bkMsg').textContent='Imported '+ds.length+' days'+(connected()?'; syncing to GitHub.':'.'); refreshLive();
+    }catch(err){ $('#bkMsg').textContent='That file is not a Baseline Logbook export.'; }
+    e.target.value='';
+  };
+}
+/* ============ GUIDE ============ */
+function renderGuide(){
+  $('#main').innerHTML = `<section class="panel">
+  <div class="card prose grid" style="gap:8px"><h2>How this works</h2>
+    <p>Three layers, each on its own clock. <b>Daily</b>: a 60-second check-in (sleep, mood, stress, training, the hard thing). <b>Monthly to quarterly</b>: physical and cognitive tests you run yourself for free. <b>Twice a year</b>: blood work. The Today tab scores five pillars from whatever you have measured, and the Review tab turns it into a weekly plan. For a deeper read, Review → Copy for Claude and paste it into the Claude app.</p>
+    <p><b>Rule for supplements:</b> measure first, then correct only what a test shows is low (vitamin D and B12 are the usual ones in India), and retest 8–12 weeks later to confirm it worked. Creatine monohydrate (3–5 g/day) is the one performance supplement with strong evidence and no test needed; it raises creatinine on blood reports, so mention it to the lab doctor.</p>
+  </div>
+
+  <div class="card grid" style="gap:10px"><h2>Baseline fortnight</h2>
+    <p class="small muted prose" style="margin:0">Do these in the first two weeks. Keep conditions identical when you retest: same time of day, same warm-up, same place.</p>
+    <div class="tablewrap"><table class="plain"><thead><tr><th>When</th><th>What</th><th>Needs</th></tr></thead><tbody>
+      <tr><td>Every morning</td><td>Pulse on waking, weight, daily check-in</td><td>Scale, 60 s</td></tr>
+      <tr><td>Day 1</td><td>Waist, height · WHO-5, PSS-10 · reaction time and digit span</td><td>Tape (₹100), 15 min</td></tr>
+      <tr><td>Day 2</td><td>Squat, bench, deadlift (hard set of 3–6) · dead hang</td><td>Gym, spotter</td></tr>
+      <tr><td>Day 4</td><td>Push-ups, pull-ups · sit-to-rise, one-leg balance, sit-and-reach</td><td>Floor, bar</td></tr>
+      <tr><td>Day 6</td><td>Cooper 12-min run + 1-min heart-rate recovery</td><td>400 m track</td></tr>
+      <tr><td>Any rest-day morning</td><td>Blood draw, fasting 10–12 h · blood pressure at the campus hospital</td><td>See lab plan</td></tr>
+    </tbody></table></div>
+  </div>
+
+  <div class="card grid" style="gap:10px"><h2>Lab plan · ₹5–10k a year</h2>
+    <div class="tablewrap"><table class="plain"><thead><tr><th>Draw</th><th>Tests</th><th>Approx. cost</th></tr></thead><tbody>
+      <tr><td>Baseline</td><td>A full-body package (CBC, lipid profile, liver, kidney, thyroid, HbA1c, vitamin D, B12, iron/ferritin — many include hs-CRP) plus add-ons: ApoB, Lp(a) (once in life), fasting insulin, homocysteine, total testosterone</td><td class="mono">₹4,500–6,500</td></tr>
+      <tr><td>+6 months</td><td>Lipid profile + ApoB, HbA1c, fasting glucose and insulin, hs-CRP; vitamin D / B12 only if they were low or you supplemented</td><td class="mono">₹2,500–3,500</td></tr>
+    </tbody></table></div>
+    <p class="small muted prose" style="margin:0">Indicative home-collection prices: packages ₹1.5–3k; ApoB about ₹650; fasting insulin and hs-CRP about ₹785 each. Compare with the IIT Madras hospital lab before booking. Anything flagged red in blood work goes to a doctor, not just to this app.</p>
+  </div>
+
+  <div class="card grid" style="gap:10px"><h2>Training baseline</h2>
+    <div class="tablewrap"><table class="plain"><thead><tr><th>Block</th><th>Dose per week</th><th>Moves</th></tr></thead><tbody>
+      <tr><td>Strength</td><td>3 full-body sessions, 45–60 min</td><td>VO₂max, grip, muscle mass — all tracked here</td></tr>
+      <tr><td>Zone 2 cardio</td><td>150+ min (e.g. 3 × 50)</td><td>Resting HR, VO₂max, glucose control</td></tr>
+      <tr><td>Intervals</td><td>1 session: 4 × 4 min hard, 3 min easy</td><td>VO₂max</td></tr>
+      <tr><td>Steps</td><td>8,000+ a day</td><td>Waist, mood</td></tr>
+      <tr><td>Sleep</td><td>7–9 h, fixed wake time, morning daylight</td><td>Reaction time, mood, stress, training recovery</td></tr>
+      <tr><td>Protein</td><td>1.6 g per kg body weight</td><td>Strength gains</td></tr>
+      <tr><td>Fortitude</td><td>One voluntary hard thing daily + 10 min meditation</td><td>Stress, discipline streaks</td></tr>
+    </tbody></table></div>
+  </div>
+
+  <div class="card grid" style="gap:10px"><h2>All tests and targets</h2>
+    <div class="tablewrap"><table class="plain"><thead><tr><th>Test</th><th>Target</th><th>Retest</th><th>Pillar</th></tr></thead><tbody>
+      ${M.map(m=>`<tr><td>${esc(m.n)}</td><td class="mono small">${esc(targetText(m))}</td><td class="small">${m.src==='daily'?'daily log':m.src==='derived'?'computed':m.cad===0?'once':m.cad>=365?'yearly':m.cad>=180?'6 months':m.cad>=90?'quarterly':m.cad>=28?'monthly':m.cad>=14?'2 weeks':'weekly'}</td><td class="small muted">${m.p?PILLARS.find(p=>p.k===m.p).n:'safety'}</td></tr>`).join('')}
+    </tbody></table></div>
+    <p class="small muted" style="margin:0">Pillar score = share of measured tests on target (close counts half). Safety markers are tracked but not scored. This is a self-tracking tool, not medical advice.</p>
+  </div>
+  </section>`;
+}
+
+/* ============ Boot ============ */
+function syncMini(){
+  if(!connected()) return '<span class="pill">not connected</span>';
+  if(S.err) return '<span class="pill bad">sync error</span>';
+  const n=pendingCount(); if(n) return `<span class="pill ok">${n} waiting</span>`;
+  return '<span class="pill good">synced</span>';
+}
+LIVE.syncmini = syncMini;
+LIVE.review = () => buildReview();
+function ago(iso){ if(!iso) return 'never'; const m=Math.round((Date.now()-new Date(iso))/60000); return m<1?'just now': m<60? m+' min ago' : m<1440? Math.round(m/60)+' h ago' : Math.round(m/1440)+' d ago'; }
+function setSync(state){
+  const el=$('#syncState'); const n=pendingCount();
+  let h;
+  if(!connected()) h='<span class="dot ok"></span> This device only';
+  else if(state==='syncing') h='<span class="dot"></span> Syncing…';
+  else if(S.err) h='<span class="dot bad"></span> Sync error';
+  else if(n) h=`<span class="dot ok"></span> ${n} change${n>1?'s':''} waiting${navigator.onLine?'':' · offline'}`;
+  else h='<span class="dot good"></span> Saved to GitHub · '+ago(S.lastSync);
+  el.innerHTML=h;
+  $('#banner').innerHTML = !connected() ? '<div class="banner">Not connected to GitHub yet, so entries stay on this device. Set it up in Review → Sync to GitHub.</div>'
+    : S.err ? `<div class="banner" style="border-color:var(--bad);background:var(--bad-soft)">${esc(S.err)} Your entries are safe on this device and will sync once this is fixed.</div>` : '';
+  document.querySelectorAll('[data-live="syncmini"]').forEach(x=>x.innerHTML=syncMini());
+}
+loadLocal();
+renderTabs(); renderMain(); setSync();
+if(connected()) pull();
+window.addEventListener('online', ()=>flush());
+window.addEventListener('offline', ()=>setSync());
+let lastPull=Date.now();
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && connected() && Date.now()-lastPull>60000){ lastPull=Date.now(); pull(); } });
+setInterval(()=>{ if(!flushing) setSync(); }, 60000);
+if('serviceWorker' in navigator && location.protocol==='https:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
